@@ -8,10 +8,10 @@ require 'image'
 require 'gnuplot'
 opt={
     ngen=3,
-    ndata=1000,             -- number of batches per epoch
+    ndata=100000,             -- number of batches per epoch
     ncentres=6,
     std_dev=0.1,
-    lr = 0.0002,            -- initial learning rate for adam
+    lr = 0.0001,            -- initial learning rate for adam
     beta1 = 0.5,            -- momentum term of adam
     nz=3,
     batchSize=32,
@@ -42,16 +42,19 @@ nz=opt.nz
 ndim=opt.ndim
 R=opt.R
 nvis=opt.nvis
+save_freq=opt.save_freq
 local real_label=ngen+1
 local fake_labels=torch.linspace(1,ngen,ngen)
+
+
 
 local G={}
 
 G.netG1= nn.Sequential()
 G.netG1:add(nn.Linear(3,128))
-G.netG1:add(nn.ReLU)
+G.netG1:add(nn.ReLU())
 G.netG1:add(nn.Linear(128,128))
-G.netG1:add(nn.ReLU)
+G.netG1:add(nn.ReLU())
 G.netG1:add(nn.Linear(128,ndim))
 
 
@@ -59,9 +62,9 @@ for i=2,ngen do
     G['netG'..i]=G.netG1:clone()
 end
 
-netD=nn.Sequential()
+local netD=nn.Sequential()
 netD:add(nn.Linear(ndim,128))
-netD:add(nn.ReLU)
+netD:add(nn.ReLU())
 netD:add(nn.Linear(128,ngen+1))
 
 local criterion=nn.CrossEntropyCriterion()
@@ -74,7 +77,7 @@ optimStateD = {
     beta1 = opt.beta1,
 }
 
-local noise=torch.Tensor(ngen,opt.batchSize,nz)
+local noise=torch.Tensor(opt.batchSize,nz)
 local input=torch.Tensor(opt.batchSize,ndim)
 local label = torch.Tensor(opt.batchSize)
 local noise_cache = torch.Tensor(ngen,opt.batchSize , nz )
@@ -89,17 +92,16 @@ local fDx=function(x)
     gradParametersD:zero()
     for i=1,ngen do
         input=input:normal(0,0.1)
-        local randints=torch.Tensor(opt.batchSize)
+        --local randints=torch.Tensor(ncentres)
         local real=input
         for j=1,opt.batchSize do
-            k=randints[j]
+            k=torch.random(1,ncentres)
             real[j][1]=real[j][1]+R*math.cos((2*k*math.pi)/ncentres)
             real[j][2]=real[j][2]+R*math.sin((2*k*math.pi)/ncentres)
         end
         input:copy(real)
         label:fill(real_label)
-        --local output=netD:forward(input)
-        netD:forward(input)
+        local output=netD:forward(input)
         errD=criterion:forward(output,label)
         local df_do=criterion:backward(output,label)
         netD:backward(input,df_do)
@@ -109,7 +111,6 @@ local fDx=function(x)
         local fake=G['netG'..i]:forward(noise)
         input:copy(fake)
         label:fill(fake_labels[i])
-        
         local output=netD:forward(input)
         errD=errD+criterion:forward(output,label)
         local df_do=criterion:backward(output,label)
@@ -138,19 +139,29 @@ for epoch=1,opt.niter do
     for iter=1,ndata/opt.batchSize do
         optim.adam( fDx, parametersD ,optimStateD)
         optim.adam( fGx, parametersG ,optimStateG)
+        --print('epoch '..epoch..' iter '..iter.. ' errG '..tostring(errG)..' errD '..tostring(errD))
     end
-    if optim.save_freq==0 then
+    if epoch%save_freq==0 then
         paths.mkdir(opt.exp_name..tostring(epoch))
+        file=io.open('gaussians.txt','w')
         for i=1,ngen do
             for j=1,nvis do
-                noise=noise:uniform(0,1)
+                noise=noise:normal(0,1)
                 local fake=G['netG'..i]:forward(noise)
-                vis[{ { 1+(i-1)*opt.batchSize,i*opt.batchSize}}]=fake
+                vis[{ { 1+(j-1)*opt.batchSize,j*opt.batchSize},{1,ndim}}]=fake
+           end
+            io.output(file)
+            for j=1,nvis*opt.batchSize do
+                io.write(string.format('%d %f %f\n',i,vis[j][1],vis[j][2]))
             end
-            gnuplot.svgfigure(opt.exp_name ..tostring(epoch)..'/gen_'..i..'.svg' )
-            gnuplot.grid(true)
-            gnuplot.scatter3(vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}]  , torch.tensor(nvis*opt.batchSize):zero()  )
-            gnuplot.plotflush()
         end
+        io.close(file)
+        gnuplot.pngfigure(opt.exp_name ..tostring(epoch)..'/out.png' )
+        gnuplot.raw("plot 'gaussians.txt' using 2:3:(sprintf('%d', $1)) with labels point pt 7 offset char 0.5,0.5 notitle")
+        gnuplot.grid(true)
+        --gnuplot.scatter3(torch.zeros(nvis*opt.batchSize)  , vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}]  )
+        --gnuplot.scatter3( vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}] , torch.zeros(nvis*opt.batchSize)  )
+        gnuplot.plotflush()
+        gnuplot.close()
     end
 end
