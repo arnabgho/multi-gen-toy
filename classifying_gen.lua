@@ -11,7 +11,7 @@ opt={
     ndata=100000,             -- number of batches per epoch
     ncentres=6,
     std_dev=0.1,
-    lr = 0.0001,            -- initial learning rate for adam
+    lr = 0.0002,            -- initial learning rate for adam
     beta1 = 0.5,            -- momentum term of adam
     nz=3,
     batchSize=32,
@@ -82,7 +82,7 @@ local input=torch.Tensor(opt.batchSize,ndim)
 local label = torch.Tensor(opt.batchSize)
 local noise_cache = torch.Tensor(ngen,opt.batchSize , nz )
 local vis=torch.Tensor(nvis*opt.batchSize,ndim)
-
+local real=torch.Tensor(opt.batchSize,ndim)
 local parametersD, gradParametersD = netD:getParameters()
 local parametersG, gradParametersG = model_utils.combine_all_parameters(G)
 
@@ -91,15 +91,19 @@ local errD=0
 local fDx=function(x)
     gradParametersD:zero()
     for i=1,ngen do
-        input=input:normal(0,0.1)
-        --local randints=torch.Tensor(ncentres)
-        local real=input
+        input:normal(0,std_dev)
+        local randints=torch.Tensor(opt.batchSize):random(1,ncentres)
+        real=input:normal(0,std_dev)
         for j=1,opt.batchSize do
-            k=torch.random(1,ncentres)
-            real[j][1]=real[j][1]+R*math.cos((2*k*math.pi)/ncentres)
-            real[j][2]=real[j][2]+R*math.sin((2*k*math.pi)/ncentres)
+            k=randints[j]
+            --print('k '..k)
+            --print('x: value '..tostring(R*math.cos((2*k*math.pi)/ncentres)))
+            --print('y: value '..tostring(R*math.sin((2*k*math.pi)/ncentres)))
+            real[j][1]=torch.normal(0,std_dev)+R*math.cos((2*k*math.pi)/ncentres)
+            real[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
         end
         input:copy(real)
+        --print(input)
         label:fill(real_label)
         local output=netD:forward(input)
         errD=criterion:forward(output,label)
@@ -141,6 +145,12 @@ for epoch=1,opt.niter do
         optim.adam( fGx, parametersG ,optimStateG)
         --print('epoch '..epoch..' iter '..iter.. ' errG '..tostring(errG)..' errD '..tostring(errD))
     end
+    local randints=torch.Tensor(opt.batchSize):random(1,ncentres)
+    for j=1,opt.batchSize do
+        k=randints[j]
+        real[j][1]=torch.normal(0,std_dev)+R*math.cos((2*k*math.pi)/ncentres)
+        real[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
+    end
     if epoch%save_freq==0 then
         paths.mkdir(opt.exp_name..tostring(epoch))
         file=io.open('gaussians.txt','w')
@@ -163,5 +173,19 @@ for epoch=1,opt.niter do
         --gnuplot.scatter3( vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}] , torch.zeros(nvis*opt.batchSize)  )
         gnuplot.plotflush()
         gnuplot.close()
+        
+        inp_file=io.open('input.txt','w')
+        io.output(inp_file)
+        for k=1,opt.batchSize do
+            io.write(string.format('%d %f %f\n',0,real[k][1],real[k][2]))
+        end
+        io.close(inp_file)
+        gnuplot.pngfigure(opt.exp_name ..tostring(epoch)..'/input.png' )
+        gnuplot.raw("plot 'input.txt' using 2:3:(sprintf('%d', $1)) with labels point pt 7 offset char 0.5,0.5 notitle")
+        gnuplot.grid(true)
+        --gnuplot.scatter3(torch.zeros(nvis*opt.batchSize)  , vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}]  )
+        --gnuplot.scatter3( vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}] , torch.zeros(nvis*opt.batchSize)  )
+        gnuplot.plotflush()
+        gnuplot.close() 
     end
 end
