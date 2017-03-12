@@ -20,7 +20,8 @@ opt={
     nvis=3,                    -- Number of samples to be visualized
     save_freq=1,
     exp_name='3gen/',
-    niter=1200
+    niter=1200,
+    batchnorm=true,
 }
 
 G={}
@@ -52,8 +53,14 @@ local G={}
 
 G.netG1= nn.Sequential()
 G.netG1:add(nn.Linear(3,128))
+if opt.batchnorm then
+    G.netG1:add(nn.BatchNormalization(128))    
+end    
 G.netG1:add(nn.ReLU())
 G.netG1:add(nn.Linear(128,128))
+if opt.batchnorm then
+    G.netG1:add(nn.BatchNormalization(128))    
+end 
 G.netG1:add(nn.ReLU())
 G.netG1:add(nn.Linear(128,ndim))
 

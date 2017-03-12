@@ -22,6 +22,8 @@ opt={
     exp_name='3gen/',
     niter=1200,
     den=0.5,                -- the imbalance density of the first cluster
+    G_hid=128,               -- The number of hidden units for the generator
+    D_hid=128                -- The number of hidden units for the discriminator
 }
 
 G={}
@@ -46,17 +48,18 @@ nvis=opt.nvis
 save_freq=opt.save_freq
 local real_label=ngen+1
 local fake_labels=torch.linspace(1,ngen,ngen)
-
+local G_hid=opt.G_hid
+local D_hid=opt.D_hid
 
 
 local G={}
 
 G.netG1= nn.Sequential()
-G.netG1:add(nn.Linear(3,128))
+G.netG1:add(nn.Linear(3,G_hid))
 G.netG1:add(nn.ReLU())
-G.netG1:add(nn.Linear(128,128))
+G.netG1:add(nn.Linear(G_hid,G_hid))
 G.netG1:add(nn.ReLU())
-G.netG1:add(nn.Linear(128,ndim))
+G.netG1:add(nn.Linear(G_hid,ndim))
 
 
 for i=2,ngen do
@@ -64,11 +67,11 @@ for i=2,ngen do
 end
 
 local netD=nn.Sequential()
-netD:add(nn.Linear(ndim,128))
+netD:add(nn.Linear(ndim,D_hid))
 netD:add(nn.ReLU())
-netD:add(nn.Linear(128,128))
-netD:add(nn.ReLU())
-netD:add(nn.Linear(128,ngen+1))
+--netD:add(nn.Linear(128,128))
+--netD:add(nn.ReLU())
+netD:add(nn.Linear(D_hid,ngen+1))
 
 local criterion=nn.CrossEntropyCriterion()
 optimStateG = {
