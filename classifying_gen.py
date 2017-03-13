@@ -13,7 +13,8 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
 import math
-#import numpy as np
+import numpy as np
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--ngen', type = int, default = 3, help = 'number of generators')
@@ -53,13 +54,13 @@ real_label = ngen
 fake_labels = torch.LongTensor(ngen).copy_(torch.linspace(0, ngen-1, ngen))	#TODO: No need to have numpy here?
 
 G = []
-for i in range(ngen):	#couldn't use clone over sequential
+for i in range(ngen):	#TODO again: couldn't use clone over sequential
 	G.append(nn.Sequential(
 				nn.Linear(3, 128),
-				#nn.BatchNorm1d(128), #TODO: Add it
+				nn.BatchNorm1d(128), #TODO: Add it
 				nn.ReLU(),
 				nn.Linear(128, 128),
-				#nn.BatchNorm1d(128),#TODO: Add it
+				nn.BatchNorm1d(128),#TODO: Add it
 				nn.ReLU(),
 				nn.Linear(128, ndim)
 			))
@@ -80,7 +81,6 @@ noise = Variable(torch.FloatTensor(opt.batchSize, nz))
 input = Variable(torch.FloatTensor(opt.batchSize, ndim))
 label = Variable(torch.LongTensor(opt.batchSize))
 fake_cache = Variable(torch.FloatTensor(ngen, opt.batchSize, ndim))
-vis = torch.FloatTensor(nvis*opt.batchSize, ndim)
 real = torch.FloatTensor(opt.batchSize, ndim)
 randints = torch.FloatTensor(opt.batchSize)
 #parametersD, gradParametersD = netD:getParameters()
@@ -88,10 +88,14 @@ randints = torch.FloatTensor(opt.batchSize)
 
 for epoch in range(opt.niter):
 	for iter in range(ndata/opt.batchSize):
+		############################
+		# (1) Update D network
+		###########################
 		errD_total = 0
 		for i in range(ngen):
 			netD.zero_grad() #TODO: should I get it out of for loop
-			randints = randints.random_(1, ncentres) #simply doing randints.random_(1, ncentres) gave error in ipython
+			# train with real
+			randints.random_(1, ncentres) #simply doing randints.random_(1, ncentres) gave error in ipython
 			#print(randints)
 			for j in range(opt.batchSize):
 				k = randints[j]
@@ -103,6 +107,7 @@ for epoch in range(opt.niter):
 			errD_real = criterion(output, label)
 			errD_real.backward()
 
+			# train with fake
 			noise.data.normal_(0, 1)
 			fake = G[i].forward(noise)
 			fake_cache[i].data.copy_(fake.data)
@@ -115,6 +120,9 @@ for epoch in range(opt.niter):
 			errD_total = errD_total + errD
 			optimizerD.step()	#TODO: should I get it out of for loop, but then will it use errD, how will effect of gradients change (as gradients change in the for loop)
 
+		############################
+		# (2) Update G network
+		###########################
 		label.data.fill_(real_label)
 		errG_total = 0
 		for i in range(ngen):
@@ -125,4 +133,28 @@ for epoch in range(opt.niter):
 			errG.backward()
 			optimizerG[i].step()
 			errG_total = errG_total + errG
-#TODO variable
+	
+	if (epoch%save_freq == 0):
+		try:
+			os.makedirs(opt.exp_name + str(epoch))
+		except OSError:
+			pass
+		randints.random_(1, ncentres)
+		inp = np.zeros((opt.batchSize, 2))
+		for j in range(opt.batchSize):
+			k=randints[j]
+			inp[j][0] = torch.normal(means = torch.FloatTensor([0.0]), std = std_dev)[0] + R*math.cos((2*k*math.pi)/ncentres)
+			inp[j][1] = torch.normal(means = torch.FloatTensor([0.0]), std = std_dev)[0] + R*math.sin((2*k*math.pi)/ncentres)
+		plt.scatter(inp[:, 0], inp[:, 1])
+		plt.savefig(opt.exp_name + str(epoch) + '/input.png')
+		plt.close()
+
+		out = np.zeros((opt.batchSize * ngen * nvis, 2))
+		for i in range(ngen):
+			for j in range(nvis):
+				noise.data.normal_(0, 1)
+				fake = G[i].forward(noise)
+				out[(i * nvis + j)* opt.batchSize : (i * nvis + j + 1)* opt.batchSize][:]=fake.data.numpy()
+		plt.scatter(out[:, 0], out[:, 1])
+		plt.savefig(opt.exp_name + str(epoch) + '/output.png')
+		plt.close()
