@@ -29,12 +29,12 @@ G={}
 for k,v in pairs(opt) do opt[k] = tonumber(os.getenv(k)) or os.getenv(k) or opt[k] end
 print(opt)
 
-
 opt.manualSeed = torch.random(1, 10000) -- fix seed
 print("Random Seed: " .. opt.manualSeed)
 torch.manualSeed(opt.manualSeed)
 torch.setnumthreads(1)
 torch.setdefaulttensortype('torch.FloatTensor')
+
 ngen=opt.ngen
 ndata=opt.ndata
 ncentres=opt.ncentres
@@ -71,6 +71,7 @@ end
 
 local netD=nn.Sequential()
 netD:add(nn.Linear(ndim,128))
+--TODO: Batch norm should be here as well
 netD:add(nn.ReLU())
 netD:add(nn.Linear(128,ngen+1))
 
@@ -98,9 +99,9 @@ local errD=0
 local fDx=function(x)
     gradParametersD:zero()
     for i=1,ngen do
-        input:normal(0,std_dev)
+        input:normal(0,std_dev) --TODO not required
         local randints=torch.Tensor(opt.batchSize):random(1,ncentres)
-        real=input:normal(0,std_dev)
+        real=input:normal(0,std_dev) --TODO not required
         for j=1,opt.batchSize do
             k=randints[j]
             --print('k '..k)
@@ -156,7 +157,7 @@ for epoch=1,opt.niter do
     for j=1,opt.batchSize do
         k=randints[j]
         real[j][1]=torch.normal(0,std_dev)+R*math.cos((2*k*math.pi)/ncentres)
-        real[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
+        0[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
     end
     if epoch%save_freq==0 then
         paths.mkdir(opt.exp_name..tostring(epoch))
