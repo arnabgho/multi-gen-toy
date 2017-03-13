@@ -71,6 +71,7 @@ end
 
 local netD=nn.Sequential()
 netD:add(nn.Linear(ndim,128))
+--netD:add(nn.BatchNormalization(128))
 --TODO: Batch norm should be here as well
 netD:add(nn.ReLU())
 netD:add(nn.Linear(128,ngen+1))

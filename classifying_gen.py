@@ -67,6 +67,7 @@ for i in range(ngen):	#TODO again: couldn't use clone over sequential
 
 netD=nn.Sequential(
 			nn.Linear(ndim, 128),
+			nn.BatchNorm1d(128),
 			nn.ReLU(),
 			nn.Linear(128, ngen + 1)
 		)
