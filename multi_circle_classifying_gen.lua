@@ -7,6 +7,8 @@ local model_utils=require 'util.model_utils'
 require 'image'
 require 'gnuplot'
 opt={
+    ncircles=1,
+    distC=10,
     ngen=3,
     ndata=100000,             -- number of batches per epoch
     ncentres=6,
@@ -21,9 +23,7 @@ opt={
     save_freq=1,
     exp_name='circles3gen/',
     niter=1200,
-    batchnorm=true,
-    ncircles=3,
-    distC=200
+    batchnorm=true
 }
 
 G={}
@@ -114,8 +114,8 @@ local fDx=function(x)
             real[j][1]=torch.normal(0,std_dev)+R*math.cos((2*k*math.pi)/ncentres)
             real[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
             k=randshifts[j]
-            real[j][1]=real[j][1]+distC*math.cos((2*k*math.pi)/ncircles)
-            real[j][2]=real[j][2]+distC*math.sin((2*k*math.pi)/ncircles)
+            --real[j][1]=real[j][1]+distC*math.cos((2*k*math.pi)/ncircles)
+            --real[j][2]=real[j][2]+distC*math.sin((2*k*math.pi)/ncircles)
        end
         input:copy(real)
         --print(input)
@@ -167,8 +167,8 @@ for epoch=1,opt.niter do
         real[j][1]=torch.normal(0,std_dev)+R*math.cos((2*k*math.pi)/ncentres)
         real[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
         k=randshifts[j]
-        real[j][1]=real[j][1]+distC*math.cos((2*k*math.pi)/ncircles)
-        real[j][2]=real[j][2]+distC*math.sin((2*k*math.pi)/ncircles)
+        --real[j][1]=real[j][1]+distC*math.cos((2*k*math.pi)/ncircles)
+        --real[j][2]=real[j][2]+distC*math.sin((2*k*math.pi)/ncircles)
     end
     if epoch%save_freq==0 then
         paths.mkdir(opt.exp_name..tostring(epoch))
