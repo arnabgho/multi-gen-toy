@@ -1,3 +1,8 @@
 3gen*
+<<<<<<< HEAD
 gaussians.txt
 input.txt
+=======
+circles3gen*
+circlesGen*
+>>>>>>> ab05a073280cedc4aa808073c83d8f06a2f061d6

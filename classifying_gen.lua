@@ -71,6 +71,7 @@ end
 
 local netD=nn.Sequential()
 netD:add(nn.Linear(ndim,128))
+--netD:add(nn.BatchNormalization(128))
 --TODO: Batch norm should be here as well
 netD:add(nn.ReLU())
 netD:add(nn.Linear(128,ngen+1))
@@ -157,7 +158,7 @@ for epoch=1,opt.niter do
     for j=1,opt.batchSize do
         k=randints[j]
         real[j][1]=torch.normal(0,std_dev)+R*math.cos((2*k*math.pi)/ncentres)
-        0[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
+        real[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
     end
     if epoch%save_freq==0 then
         paths.mkdir(opt.exp_name..tostring(epoch))
