@@ -1,14 +1,22 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import sys, getopt
+
 
 binSize = 10
 colors = ['b', 'c', 'y', 'm', 'r']
 files = ['input', 'out']
 
-for folder in range(1000):
+def Main(argv):
+	try:
+		folder = argv[0]
+		epoch = argv[1]
+	except:
+		print('python histPlotter.py folderName epochName')
+		
 	for file in files:
-		inp = np.loadtxt(str(folder) + '/' + file + '.txt', delimiter=' ')
+		inp = np.loadtxt(folder + '/' + str(epoch) + '/' + file + '.txt', delimiter=' ')
 		numHist = max(inp[:,0])
 		if (int(numHist) == 0):
 			numHist = 1
@@ -39,5 +47,12 @@ for folder in range(1000):
 
 			plt.legend(tuple(plotted), tuple(generators))
 
-		plt.savefig(str(folder) + '/' + file + '.png')
+		plt.savefig(folder + '/' + str(epoch) + '/' + file + '.png')
 		plt.close()
+
+def Runner(folder = 'linearGen_3_100_3_3_256_5_6'):
+	for i in range(1000):
+		Main([folder, str(i + 1)])
+
+if __name__=="__main__":
+	Main(sys.argv[1:])
