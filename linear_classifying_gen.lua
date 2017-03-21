@@ -10,19 +10,20 @@ opt={
     distC=100,
     ngen=3,
     nz=3,
-    batchSize=128,
+    batchSize=256,
     R=5,
     ncentres=6,
     ndata=100000,             -- number of batches per epoch
     std_dev=0.1,
     lr = 0.0002,            -- initial learning rate for adam
     beta1 = 0.5,            -- momentum term of adam
-    ndim=2,
+    ndim=1,
     nvis=3,                    -- Number of samples to be visualized
     save_freq=1,
-    exp_name='circlesGen',
+    exp_name='linearGen',
     niter=1200,
-    batchnorm=true
+    batchnorm=true,
+    nbin=20,
 }
 
 G={}
@@ -48,6 +49,7 @@ save_freq=opt.save_freq
 distC=opt.distC
 ncircles=opt.ncircles
 batchSize=opt.batchSize
+nbin=opt.nbin
 local real_label=ngen+1
 local fake_labels=torch.linspace(1,ngen,ngen)
 
@@ -103,15 +105,24 @@ local fDx=function(x)
     for i=1,ngen do
         input:normal(0,std_dev)
         local randints=torch.Tensor(opt.batchSize):random(1,ncentres)
-        local randshifts=torch.Tensor(opt.batchSize):random(1,ncircles)
+        --local randshifts=torch.Tensor(opt.batchSize):random(1,ncircles)
         --real=input:normal(0,std_dev)
         for j=1,opt.batchSize do
             k=randints[j]
-            real[j][1]=torch.normal(0,std_dev)+R*math.cos((2*k*math.pi)/ncentres)
-            real[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
-            k=randshifts[j]
-            real[j][1]=real[j][1]+distC*math.cos((2*k*math.pi)/ncircles)
-            real[j][2]=real[j][2]+distC*math.sin((2*k*math.pi)/ncircles)
+            if ncentres%2==1 then
+                k=k-(ncentres+1)/2
+            else
+               if k%2==0 then
+                   k=-(k-1)
+               else
+                   k=k
+               end
+            end
+            real[j][1]=torch.normal(0,std_dev)+k*R   -- +R*math.cos((2*k*math.pi)/ncentres)
+            --real[j][2]=torch.normal(0,std_dev)+k    -- R*math.sin((2*k*math.pi)/ncentres)
+            --k=randshifts[j]
+            --real[j][1]=real[j][1]+distC*math.cos((2*k*math.pi)/ncircles)
+            --real[j][2]=real[j][2]+distC*math.sin((2*k*math.pi)/ncircles)
         end
         input:copy(real)
         --print(input)
@@ -182,31 +193,38 @@ for epoch=1,opt.niter do
                 vis[{ { 1+(j-1)*opt.batchSize,j*opt.batchSize},{1,ndim}}]=fake
            end
             io.output(file)
+            gnuplot.pngfigure(dir..'/out_'..i..'.png')
+            gnuplot.hist(vis,nbin)
+            gnuplot.plotflush()
+            gnuplot.close()
             for j=1,nvis*opt.batchSize do
-                io.write(string.format('%d %f %f\n',i,vis[j][1],vis[j][2]))
+                io.write(string.format('%d %f\n',i,vis[j][1]))
             end
         end
         io.close(file)
-        gnuplot.pngfigure(dir..'/out.png' )
-        gnuplot.raw("plot '"..dir..'/out.txt'.."' using 2:3:(sprintf('%d', $1)) with labels point pt 7 offset char 0.5,0.5 notitle")
-        gnuplot.grid(true)
-        --gnuplot.scatter3(torch.zeros(nvis*opt.batchSize)  , vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}]  )
-        --gnuplot.scatter3( vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}] , torch.zeros(nvis*opt.batchSize)  )
-        gnuplot.plotflush()
-        gnuplot.close()
-        
+        --gnuplot.pngfigure(dir..'/out.png' )
+        --gnuplot.raw("plot '"..dir..'/out.txt'.."' using 2:3:(sprintf('%d', $1)) with labels point pt 7 offset char 0.5,0.5 notitle")
+        --gnuplot.grid(true)
+        ----gnuplot.scatter3(torch.zeros(nvis*opt.batchSize)  , vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}]  )
+        ----gnuplot.scatter3( vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}] , torch.zeros(nvis*opt.batchSize)  )
+        --gnuplot.plotflush()
+        --gnuplot.close()
+        --
         inp_file=io.open(dir..'/input.txt','w')
         io.output(inp_file)
         for k=1,opt.batchSize do
-            io.write(string.format('%d %f %f\n',0,real[k][1],real[k][2]))
+            io.write(string.format('%d %f\n',0,real[k][1]))
         end
         io.close(inp_file)
         gnuplot.pngfigure(dir..'/input.png' )
-        gnuplot.raw("plot '"..dir..'/input.txt'.."' using 2:3:(sprintf('%d', $1)) with labels point pt 7 offset char 0.5,0.5 notitle")
-        gnuplot.grid(true)
-        --gnuplot.scatter3(torch.zeros(nvis*opt.batchSize)  , vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}]  )
-        --gnuplot.scatter3( vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}] , torch.zeros(nvis*opt.batchSize)  )
+        gnuplot.hist(real,ngen*nbin)
         gnuplot.plotflush()
         gnuplot.close()
+        --gnuplot.raw("plot '"..dir..'/input.txt'.."' using 2:3:(sprintf('%d', $1)) with labels point pt 7 offset char 0.5,0.5 notitle")
+        --gnuplot.grid(true)
+        ----gnuplot.scatter3(torch.zeros(nvis*opt.batchSize)  , vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}]  )
+        ----gnuplot.scatter3( vis[{{1,nvis*opt.batchSize},1}] ,  vis[{{1,nvis*opt.batchSize},2}] , torch.zeros(nvis*opt.batchSize)  )
+        --gnuplot.plotflush()
+        --gnuplot.close()
     end
 end
