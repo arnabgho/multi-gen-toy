@@ -13,6 +13,7 @@ opt={
     batchSize=128,
     R=5,
     ncentres=6,
+    den=0.5,    
     ndata=100000,             -- number of batches per epoch
     std_dev=0.1,
     lr = 0.0002,            -- initial learning rate for adam
@@ -22,7 +23,7 @@ opt={
     save_freq=1,
     exp_name='circlesGen',
     niter=1200,
-    batchnorm=true
+    batchnorm=true,
 }
 
 G={}
@@ -57,16 +58,18 @@ local G={}
 
 G.netG1= nn.Sequential()
 G.netG1:add(nn.Linear(3,128))
-if opt.batchnorm then
+if opt.batchnorm==true then
     G.netG1:add(nn.BatchNormalization(128))    
 end    
 G.netG1:add(nn.ReLU())
 G.netG1:add(nn.Linear(128,128))
-if opt.batchnorm then
+if opt.batchnorm==true then
     G.netG1:add(nn.BatchNormalization(128))    
 end
 G.netG1:add(nn.ReLU())
 G.netG1:add(nn.Linear(128,ndim))
+
+print(G.netG1)
 
 for i=2,ngen do
     G['netG'..i]=G.netG1:clone()
@@ -95,7 +98,8 @@ local vis=torch.Tensor(nvis*opt.batchSize,ndim)
 local real=torch.Tensor(opt.batchSize,ndim)
 local parametersD, gradParametersD = netD:getParameters()
 local parametersG, gradParametersG = model_utils.combine_all_parameters(G)
-
+local densities=torch.Tensor(ncircles):fill(1)
+densities[ncircles]=opt.den
 local errG=0
 local errD=0
 local fDx=function(x)
@@ -103,7 +107,8 @@ local fDx=function(x)
     for i=1,ngen do
         input:normal(0,std_dev)
         local randints=torch.Tensor(opt.batchSize):random(1,ncentres)
-        local randshifts=torch.Tensor(opt.batchSize):random(1,ncircles)
+        --local randshifts=torch.Tensor(opt.batchSize):random(1,ncircles)
+        local randshifts=torch.multinomial(densities,opt.batchSize,true)
         real=input:normal(0,std_dev)
         for j=1,opt.batchSize do
             k=randints[j]
@@ -157,17 +162,15 @@ for epoch=1,opt.niter do
         --print('epoch '..epoch..' iter '..iter.. ' errG '..tostring(errG)..' errD '..tostring(errD))
     end
     local randints=torch.Tensor(opt.batchSize):random(1,ncentres)
-    local randshifts=torch.Tensor(opt.batchSize):random(1,ncircles)
+    --local randshifts=torch.Tensor(opt.batchSize):random(1,ncircles)
+
+    local randshifts=torch.multinomial(densities,opt.batchSize,true)
+        real=input:normal(0,std_dev)
     for j=1,opt.batchSize do
         k=randints[j]
         real[j][1]=torch.normal(0,std_dev)+R*math.cos((2*k*math.pi)/ncentres)
         real[j][2]=torch.normal(0,std_dev)+R*math.sin((2*k*math.pi)/ncentres)
         k=randshifts[j]
-        if k==1 then
-            if torch.rand(1)[1]>0.1 then 
-                k=2
-            end
-        end
         real[j][1]=real[j][1]+distC*math.cos((2*k*math.pi)/ncircles)
         real[j][2]=real[j][2]+distC*math.sin((2*k*math.pi)/ncircles)
     end
