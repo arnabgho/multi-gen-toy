@@ -24,6 +24,7 @@ opt={
     niter=1200,
     batchnorm=true,
     nbin=20,
+    batchnormD=false,
 }
 
 G={}
@@ -76,6 +77,9 @@ end
 
 local netD=nn.Sequential()
 netD:add(nn.Linear(ndim,128))
+if opt.batchnormD==true then
+    netD:add(nn.BatchNormalization(128))
+end
 netD:add(nn.ReLU())
 netD:add(nn.Linear(128,ngen+1))
 
