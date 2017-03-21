@@ -198,7 +198,7 @@ for epoch=1,opt.niter do
            end
             io.output(file)
             gnuplot.pngfigure(dir..'/out_'..i..'.png')
-            gnuplot.hist(vis,nbin)
+            gnuplot.hist(vis) --gnuplot.hist(vis,nbin)
             gnuplot.plotflush()
             gnuplot.close()
             for j=1,nvis*opt.batchSize do
@@ -221,7 +221,7 @@ for epoch=1,opt.niter do
         end
         io.close(inp_file)
         gnuplot.pngfigure(dir..'/input.png' )
-        gnuplot.hist(real,ngen*nbin)
+        gnuplot.hist(real,1000) --gnuplot.hist(real) --gnuplot.hist(real,ngen*nbin)
         gnuplot.plotflush()
         gnuplot.close()
         --gnuplot.raw("plot '"..dir..'/input.txt'.."' using 2:3:(sprintf('%d', $1)) with labels point pt 7 offset char 0.5,0.5 notitle")
