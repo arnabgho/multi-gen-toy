@@ -7,7 +7,7 @@ import sys, getopt
 binSize = 10
 colors = ['b', 'c', 'y', 'm', 'r']
 files = ['input', 'out']
-outFiles = ['realInput', 'generatedOutput']
+outFiles = ['CrealInput', 'CgeneratedOutput']
 
 def Main(argv):
 	try:

@@ -18,7 +18,7 @@ opt={
     lr = 0.0002,            -- initial learning rate for adam
     beta1 = 0.5,            -- momentum term of adam
     ndim=1,
-    nvis=3,                    -- Number of samples to be visualized
+    nvis=10,                    -- Number of samples to be visualized
     save_freq=1,
     exp_name='linearGen',
     niter=1200,
@@ -216,8 +216,25 @@ for epoch=1,opt.niter do
         --
         inp_file=io.open(dir..'/input.txt','w')
         io.output(inp_file)
-        for k=1,opt.batchSize do
-            io.write(string.format('%d %f\n',0,real[k][1]))
+
+        local randints=torch.Tensor(opt.batchSize*nvis*ngen):random(1,ncentres)
+        for j=1,opt.batchSize*nvis*ngen do
+            k=randints[j]
+            if ncentres%2==1 then
+                k=k-(ncentres+1)/2
+            else
+               if k%2==0 then
+                   k=-(k-1)
+               else
+                   k=k
+               end
+            end
+            local val=torch.normal(0,std_dev)+k*R   -- +R*math.cos((2*k*math.pi)/ncentres)
+            io.write(string.format('%d %f\n',0,val))
+            --real[j][2]=torch.normal(0,std_dev)+k    -- R*math.sin((2*k*math.pi)/ncentres)
+            --k=randshifts[j]
+            --real[j][1]=real[j][1]+distC*math.cos((2*k*math.pi)/ncircles)
+            --real[j][2]=real[j][2]+distC*math.sin((2*k*math.pi)/ncircles)
         end
         io.close(inp_file)
         gnuplot.pngfigure(dir..'/input.png' )
