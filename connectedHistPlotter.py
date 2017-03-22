@@ -38,7 +38,7 @@ def Main(argv):
 			height = height + hist[0]
 			i = i + lenHist
 
-		plt.plot(bins[:-1], height, '-o')
+		plt.plot((bins[:-1] + bins[1:])/2, height, '-o')
 		plotted = []
 		generators = []
 
