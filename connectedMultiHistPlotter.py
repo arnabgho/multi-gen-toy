@@ -14,7 +14,7 @@ def Main(argv):
 		folder = argv[0]
 		epoch = argv[1]
 	except:
-		print('python multiHistPlotter.py folderName epochName')
+		print('python connectedMultiHistPlotter.py folderName epochName')
 
         inp = np.loadtxt(folder+'/'+str(epoch)+'/'+'input.txt',delimiter=' ')
         out = np.loadtxt(folder+'/'+str(epoch)+'/'+'out.txt',delimiter=' ')
@@ -88,7 +88,7 @@ def Runner(argv):
 	try:
 		folder = argv[0]
 	except:
-		print('python multiHistPlotter.py folderName')
+		print('python connectedMultiHistPlotter.py folderName')
 
 	for i in range(1000):
 		Main([folder, str(i + 1)])
