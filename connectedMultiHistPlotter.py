@@ -33,7 +33,7 @@ def Main(argv):
 		plt.plot((bins[:-1] + bins[1:])/2, hist[0], '-o')
 		plt.legend(loc='upper right')
 		#plt.show()
-		plt.savefig(folder + '/' + str(epoch) + '/' + 'C_G_'+str(i) + '.png')
+		plt.savefig(folder + '/' + str(epoch) + '/' + 'Con_G_'+str(i) + '.png')
 		plt.close()
         out_all=out[ :,1 ]
         minim=min(np.concatenate((out_all,inp_all),axis=0))
@@ -43,7 +43,9 @@ def Main(argv):
 	plt.hist(out_all, bins, alpha=0.1, label='G'+'_all',color='b' )
 	plt.legend(loc='upper right')
 	#plt.show()
-	plt.savefig(folder + '/' + str(epoch) + '/' + 'G_all' + '.png')
+	hist = np.histogram(out_all, bins = bins)
+	plt.plot((bins[:-1] + bins[1:])/2, hist[0], '-o')
+	plt.savefig(folder + '/' + str(epoch) + '/' + 'Con_G_all' + '.png')
 	plt.close()
 
 #
