@@ -14,7 +14,7 @@ def Main(argv):
 		folder = argv[0]
 		epoch = argv[1]
 	except:
-		print('python histPlotter.py folderName epochName')
+		print('python connectedHistPlotter.py folderName epochName')
 
 	for Id in len(files):
 		inp = np.loadtxt(folder + '/' + str(epoch) + '/' + files[Id] + '.txt', delimiter=' ')
@@ -56,7 +56,7 @@ def Runner(argv):
 	try:
 		folder = argv[0]
 	except:
-		print('python histPlotter.py folderName')
+		print('python connectedHistPlotter.py folderName')
 
 	for i in range(1000):
 		Main([folder, str(i + 1)])
