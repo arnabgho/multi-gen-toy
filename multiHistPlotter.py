@@ -33,6 +33,17 @@ def Main(argv):
 		#plt.show()
 		plt.savefig(folder + '/' + str(epoch) + '/' + 'G_'+str(i) + '.png')
 		plt.close()
+        out_all=out[ :,1 ]
+        minim=min(np.concatenate((out_all,inp_all),axis=0))
+        maxim=max(np.concatenate((out_all,inp_all),axis=0))
+        bins=np.linspace(minim,maxim,numBins)
+	plt.hist(inp_all, bins, alpha=1, label='input',color='b'  )
+	plt.hist(out_all, bins, alpha=0.1, label='G'+'_all',color='b' )
+	plt.legend(loc='upper right')
+	#plt.show()
+	plt.savefig(folder + '/' + str(epoch) + '/' + 'G_all' + '.png')
+	plt.close()
+
 #
 #		plt.savefig(folder + '/' + str(epoch) + '/' + outFiles[Id] + '.png')
 
