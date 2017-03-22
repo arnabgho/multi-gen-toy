@@ -16,7 +16,7 @@ def Main(argv):
 	except:
 		print('python connectedHistPlotter.py folderName epochName')
 
-	for Id in len(files):
+	for Id in range(len(files)):
 		inp = np.loadtxt(folder + '/' + str(epoch) + '/' + files[Id] + '.txt', delimiter=' ')
 		numHist = max(inp[:,0])
 		if (int(numHist) == 0):
