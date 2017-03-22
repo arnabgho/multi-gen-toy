@@ -29,8 +29,6 @@ def Main(argv):
         	bins=np.linspace(minim,maxim,numBins)
 		plt.hist(inp_all, bins, alpha=1, label='input',color='b'  )
 		plt.hist(out_all, bins, alpha=0.1, label='G'+str(i),color='b' )
-		hist = np.histogram(out_all, bins = bins)
-		plt.plot((bins[:-1] + bins[1:])/2, hist[0], '-o')
 		plt.legend(loc='upper right')
 		#plt.show()
 		plt.savefig(folder + '/' + str(epoch) + '/' + 'G_'+str(i) + '.png')
