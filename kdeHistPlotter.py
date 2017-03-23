@@ -2,7 +2,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import sys, getopt
-
+from scipy.stats.kde import gaussian_kde
 numBins=1000
 binSize = 10
 colors = ['b', 'c', 'y', 'm', 'r']
@@ -22,29 +22,48 @@ def Main(argv):
         inp_all=inp[:,1]
         ngen=max(out[:,0]).astype(int)
         num_out=out.shape[0]/ngen
+        inp_kde=gaussian_kde(inp_all)
+        inp_kde.set_bandwidth(bw_method='silverman')
+        inp_kde.set_bandwidth(bw_method=inp_kde.factor / 3.)
         for i in xrange(1,ngen+1):
-        	out_all=out[ num_out*(i-1):num_out*(i)-1,1 ]
-        	minim=min(np.concatenate((out_all,inp_all),axis=0))
-        	maxim=max(np.concatenate((out_all,inp_all),axis=0))
-        	bins=np.linspace(minim,maxim,numBins)
-		plt.hist(inp_all, bins, alpha=1,normed=True, label='input',color='b'  )
-		plt.hist(out_all, bins, alpha=0.1,normed=True , label='G'+str(i),color='b' )
-		hist = np.histogram(out_all, bins = bins)
-		#plt.plot((bins[:-1] + bins[1:])/2, hist[0], '-o')
-		plt.legend(loc='upper right')
-		#plt.show()
-		plt.savefig(folder + '/' + str(epoch) + '/' + 'G_'+str(i) + '.png')
-		plt.close()
+            out_all=out[ num_out*(i-1):num_out*(i)-1,1 ]
+            minim=min(np.concatenate((out_all,inp_all),axis=0))
+            maxim=max(np.concatenate((out_all,inp_all),axis=0))
+            bins=np.linspace(minim,maxim,numBins)
+		    #plt.hist(inp_all, bins, alpha=1, label='input',color='b'  )
+		    #plt.hist(out_all, bins, alpha=0.1, label='G'+str(i),color='b' )
+            kde=gaussian_kde(out_all)
+            kde.set_bandwidth(bw_method='silverman')
+            kde.set_bandwidth(bw_method=kde.factor / 3.)
+
+            weights = np.ones_like(out_all)/float(len(out_all))
+            #plt.hist(myarray, weights=weights)
+	    plt.hist(out_all, bins, alpha=0.1,normed=0 ,weights=weights, label='G'+str(i),color='b' )
+            #plt.plot(bins,kde(bins),color='b',label='Generator Distribution' )
+            plt.plot(bins,inp_kde(bins),color='r', label='Real Distribution')
+            plt.legend(loc='upper right')
+	    #plt.show()
+	    plt.savefig(folder + '/' + str(epoch) + '/' + 'MKG_'+str(i) + '.png')
+	    plt.close()
         out_all=out[ :,1 ]
+        weights=np.ones_like(out_all)/float(len(out_all))
         minim=min(np.concatenate((out_all,inp_all),axis=0))
         maxim=max(np.concatenate((out_all,inp_all),axis=0))
         bins=np.linspace(minim,maxim,numBins)
-	plt.hist(inp_all, bins, alpha=1,normed=True , label='input',color='b'  )
-	plt.hist(out_all, bins, alpha=0.1,normed=True , label='G'+'_all',color='b' )
-	plt.legend(loc='upper right')
-	#plt.show()
-	plt.savefig(folder + '/' + str(epoch) + '/' + 'G_all' + '.png')
-	plt.close()
+        #plt.hist(inp_all, bins, alpha=1, label='input',color='b'  )
+        #plt.hist(out_all, bins, alpha=0.1, label='G'+str(i),color='b' )
+        kde=gaussian_kde(out_all)
+        kde.set_bandwidth(bw_method='silverman')
+        kde.set_bandwidth(bw_method=kde.factor / 3.)
+        weights=np.ones_like(out_all)/float(len(out_all) )
+	plt.hist(out_all, bins, alpha=0.1,normed=0 ,weights=weights,   label='G'+'_all',color='b' )
+
+        plt.hist(inp_all,bins, alpha=0.9, weights=weights,  color='b',label='Generator Distribution' )
+        #plt.plot(bins,inp_kde(bins),color='r', label='Real Distribution')
+        plt.legend(loc='upper right')
+        #plt.show()
+        plt.savefig(folder + '/' + str(epoch) + '/' + 'MKG_all' + '.png')
+        plt.close()
 
 #
 #		plt.savefig(folder + '/' + str(epoch) + '/' + outFiles[Id] + '.png')
