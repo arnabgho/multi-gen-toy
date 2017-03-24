@@ -27,7 +27,6 @@ opt={
     batchnormD=false,
 }
 
-G={}
 
 for k,v in pairs(opt) do opt[k] = tonumber(os.getenv(k)) or os.getenv(k) or opt[k] end
 print(opt)
