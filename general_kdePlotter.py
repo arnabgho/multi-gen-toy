@@ -13,10 +13,12 @@ def Main(argv):
 	try:
 		folder = argv[0]
 		epoch = argv[1]
+                data = argv[2]
 	except:
-		print('python multiHistPlotter.py folderName epochName')
+		print('python general_kdePlotter.py folderName epochName dataname')
 
-        inp = np.loadtxt(folder+'/'+str(epoch)+'/'+'input.txt',delimiter=' ')
+        inp = np.loadtxt('datasets/'+str(data)+'/'+'input.txt',delimiter=' ')
+        folder='datasets/'+str(data)+'/'+ folder
         out = np.loadtxt(folder+'/'+str(epoch)+'/'+'out.txt',delimiter=' ')
 
         inp_all=inp[:,1]
@@ -34,7 +36,7 @@ def Main(argv):
 		    #plt.hist(out_all, bins, alpha=0.1, label='G'+str(i),color='b' )
             kde=gaussian_kde(out_all)
             kde.set_bandwidth(bw_method='silverman')
-            kde.set_bandwidth(bw_method=kde.factor / 9.)
+            kde.set_bandwidth(bw_method=kde.factor / 3.)
 
             plt.plot(bins,kde(bins),color='b',label='Generator Distribution' )
             plt.plot(bins,inp_kde(bins),color='r', label='Real Distribution')
@@ -50,7 +52,7 @@ def Main(argv):
         #plt.hist(out_all, bins, alpha=0.1, label='G'+str(i),color='b' )
         kde=gaussian_kde(out_all)
         kde.set_bandwidth(bw_method='silverman')
-        kde.set_bandwidth(bw_method=kde.factor / 9.)
+        kde.set_bandwidth(bw_method=kde.factor / 3.)
 
         plt.plot(bins,kde(bins),color='b',label='Generator Distribution' )
         plt.plot(bins,inp_kde(bins),color='r', label='Real Distribution')

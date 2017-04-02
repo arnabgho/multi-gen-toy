@@ -8,8 +8,8 @@ require 'gnuplot'
 opt={
     ncircles=3,
     distC=100,
-    ngen=3,
-    nz=3,
+    ngen=1,
+    nz=1,
     batchSize=256,
     R=5,
     ncentres=6,
@@ -19,7 +19,7 @@ opt={
     beta1 = 0.5,            -- momentum term of adam
     ndim=1,
     nvis=1000,                    -- Number of samples to be visualized
-    save_freq=1,
+    save_freq=50,
     exp_name='headsLinearGen',
     niter=1200,
     batchnorm=true,
@@ -28,14 +28,14 @@ opt={
     nhid=128,
     folder='datasets',
     data_name='test',
-    t7_filename='data.t7'
+    t7_filename='data.t7',
 }
 
 
 for k,v in pairs(opt) do opt[k] = tonumber(os.getenv(k)) or os.getenv(k) or opt[k] end
 print(opt)
 
-opt.manualSeed = torch.random(1, 10000) -- fix seed
+opt.manualSeed =7-- torch.random(1, 10000) -- fix seed
 print("Random Seed: " .. opt.manualSeed)
 torch.manualSeed(opt.manualSeed)
 torch.setnumthreads(1)
@@ -164,7 +164,8 @@ for epoch=1,opt.niter do
     end
     --print('epoch '..epoch..' errG '..tostring(errG)..' errD '..tostring(errD))
     if epoch%save_freq==0 then
-        local dir = paths.concat(opt.folder,opt.data_name,opt.exp_name,tostring(epoch))
+        local name=opt.exp_name .. '_' .. opt.ngen .. '_' .. tostring(opt.batchnorm) .. '_' .. opt.nhid .. '_' .. opt.nz
+        local dir = paths.concat(opt.folder,opt.data_name,name ,tostring(epoch))
         paths.mkdir(dir)
         file=io.open(dir..'/out.txt','w')
         for i=1,ngen do
