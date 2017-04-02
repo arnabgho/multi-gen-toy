@@ -22,6 +22,7 @@ opt={
     exp_name='3gen/',
     niter=1200,
     batchnorm=true,
+    nhid=128,
 }
 
 G={}

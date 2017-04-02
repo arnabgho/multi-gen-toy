@@ -25,6 +25,7 @@ opt={
     batchnorm=true,
     nbin=20,
     batchnormD=false,
+    nhid=128,
 }
 
 G={}
@@ -51,6 +52,7 @@ distC=opt.distC
 ncircles=opt.ncircles
 batchSize=opt.batchSize
 nbin=opt.nbin
+nhid=opt.nhid
 local real_label=ngen+1
 local fake_labels=torch.linspace(1,ngen,ngen)
 
@@ -59,29 +61,29 @@ local fake_labels=torch.linspace(1,ngen,ngen)
 local G={}
 
 G.netG1= nn.Sequential()
-G.netG1:add(nn.Linear(3,128))
+G.netG1:add(nn.Linear(nz,nhid))
 if opt.batchnorm==true then
-    G.netG1:add(nn.BatchNormalization(128))    
+    G.netG1:add(nn.BatchNormalization(nhid))    
 end    
 G.netG1:add(nn.ReLU())
-G.netG1:add(nn.Linear(128,128))
+G.netG1:add(nn.Linear(nhid,128))
 if opt.batchnorm==true then
-    G.netG1:add(nn.BatchNormalization(128))    
+    G.netG1:add(nn.BatchNormalization(nhid))    
 end
 G.netG1:add(nn.ReLU())
-G.netG1:add(nn.Linear(128,ndim))
-
+G.netG1:add(nn.Linear(nhid,ndim))
+print(G.netG1)
 for i=2,ngen do
     G['netG'..i]=G.netG1:clone()
 end
 
 local netD=nn.Sequential()
-netD:add(nn.Linear(ndim,128))
+netD:add(nn.Linear(ndim,nhid))
 if opt.batchnormD==true then
-    netD:add(nn.BatchNormalization(128))
+    netD:add(nn.BatchNormalization(nhid))
 end
 netD:add(nn.ReLU())
-netD:add(nn.Linear(128,ngen+1))
+netD:add(nn.Linear(nhid,ngen+1))
 
 local criterion=nn.CrossEntropyCriterion()
 optimStateG = {
