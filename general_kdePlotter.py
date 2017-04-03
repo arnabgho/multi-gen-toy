@@ -22,6 +22,8 @@ def Main(argv):
         out = np.loadtxt(folder+'/'+str(epoch)+'/'+'out.txt',delimiter=' ')
 
         inp_all=inp[:,1]
+        if out.shape[0]>inp_all.shape[0]:
+            out=out[0:inp_all.shape[0],:]
         ngen=max(max(out[:,0]).astype(int),1)
         num_out=out.shape[0]/ngen
         inp_kde=gaussian_kde(inp_all)
