@@ -157,10 +157,10 @@ end
 
 
 for epoch=1,opt.niter do
-    local nbatches=math.floor(data:size(1)/opt.batchSize)
+    local nbatches=math.floor(data:size(1)/(opt.batchSize*opt.K))
     for iter=1,nbatches do
-        real=data[{{1+(iter-1)*opt.batchSize,iter*opt.batchSize  },{1 , ndim}}]
         for k=1,opt.K do
+            real=data[{{1+((iter-1)*opt.K + k-1 ) *opt.batchSize,((iter-1)*opt.K+k)*opt.batchSize  },{1 , ndim}}]
             optim.adam( fDx, parametersD ,optimStateD)
         end
         optim.adam( fGx, parametersG ,optimStateG)
