@@ -27,9 +27,9 @@ opt={
     batchnormD=false,
     nhid=128,
     folder='datasets',
-    data_name='test',
+    data_name='8',
     t7_filename='data.t7',
-    K=1,
+    K=5,
     clamp_lower=-0.01,
     clamp_upper=0.01,
 }
@@ -95,7 +95,7 @@ if opt.batchnormD==true then
     netD:add(nn.BatchNormalization(nhid))
 end
 netD:add(nn.ReLU())
-netD:add(nn.Linear(nhid,ngen+1))
+netD:add(nn.Linear(nhid,1))
 
 local criterion=nn.CrossEntropyCriterion()
 optimStateG = {
