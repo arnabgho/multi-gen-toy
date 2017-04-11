@@ -23,7 +23,7 @@ def Main(argv):
 
         inp_all=inp[:,1]
         if out.shape[0]>inp_all.shape[0]:
-            out=out[0:inp_all.shape[0],:]
+            out=out[ np.random.choice(out.shape[0],inp_all.shape[0],replace=False)  ,:]
         ngen=max(max(out[:,0]).astype(int),1)
         num_out=out.shape[0]/ngen
         inp_kde=gaussian_kde(inp_all)

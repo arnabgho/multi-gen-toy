@@ -20,7 +20,7 @@ opt={
     ndim=1,
     nvis=1000,                    -- Number of samples to be visualized
     save_freq=50,
-    exp_name='headsLinearGen',
+    exp_name='wasserstein',
     niter=1200,
     batchnorm=true,
     nbin=20,
@@ -30,6 +30,8 @@ opt={
     data_name='test',
     t7_filename='data.t7',
     K=1,
+    clamp_lower=-0.01,
+    clamp_upper=0.01,
 }
 
 
@@ -123,19 +125,22 @@ local fDx=function(x)
         --print(input)
         label:fill(real_label)
         local output=netD:forward(input)
-        errD=criterion:forward(output,label)
-        local df_do=criterion:backward(output,label)
+        local errD_real=output
+        --errD=criterion:forward(output,label)
+        local df_do= output:fill(1)      --criterion:backward(output,label)
         netD:backward(input,df_do)
 
         noise:normal(0,1)
         noise_cache[i]=noise
         local fake=G['netG'..i]:forward(noise)
         input:copy(fake)
-        label:fill(fake_labels[i])
+        --label:fill(fake_labels[i])
         local output=netD:forward(input)
-        errD=errD+criterion:forward(output,label)
-        local df_do=criterion:backward(output,label)
+        local errD_fake=output
+        --errD=errD+criterion:forward(output,label)
+        local df_do= output:fill(-1)       --criterion:backward(output,label)
         netD:backward(input,df_do)
+        errD=errD_real-errD_fake
     end
     return errD,gradParametersD
 end
@@ -147,8 +152,9 @@ local fGx=function(x)
     errG=0
     for i=1,ngen do
         local output=netD:forward(G['netG'..i].output)
-        errG=errG+criterion:forward(output,label)
-        local df_do=criterion:backward(output,label)
+        --errG=errG+criterion:forward(output,label)
+        errG=output
+        local df_do=  output:fill(1)         --criterion:backward(output,label)
         local df_dg=netD:updateGradInput(G['netG'..i].output,df_do)
         G['netG'..i]:backward(noise,df_dg)
     end
@@ -157,10 +163,11 @@ end
 
 
 for epoch=1,opt.niter do
-    local nbatches=math.floor(data:size(1)/opt.batchSize)
+    local nbatches=math.floor(data:size(1)/(opt.batchSize*opt.K))
     for iter=1,nbatches do
-        real=data[{{1+(iter-1)*opt.batchSize,iter*opt.batchSize  },{1 , ndim}}]
         for k=1,opt.K do
+            real=data[{{1+((iter-1)*opt.K + k-1 ) *opt.batchSize,((iter-1)*opt.K+k)*opt.batchSize  },{1 , ndim}}]
+            parametersD:clamp(opt.clamp_lower,opt.clamp_upper)
             optim.adam( fDx, parametersD ,optimStateD)
         end
         optim.adam( fGx, parametersG ,optimStateG)
