@@ -13,7 +13,7 @@ outFiles = ['realInput', 'generatedOutput']
 def Main(argv):
 	try:
 		folder = argv[0]
-		epoch = argv[1]
+                epoch = argv[1]
                 data = argv[2]
 	except:
 		print('python general_kdePlotter.py folderName epochName dataname')
@@ -24,7 +24,8 @@ def Main(argv):
 
         inp_all=inp[:,1]
         out_all=out[:,1]
-        print( ks_2samp(inp_all,out_all))
+        with open(folder+'/'+str(epoch)+'/'+'stats.txt','w') as f:
+            f.write(str(ks_2samp(inp_all,out_all)))
 
 def Runner(argv):
 	try:
