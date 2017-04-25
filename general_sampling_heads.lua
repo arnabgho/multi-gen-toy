@@ -175,9 +175,11 @@ for epoch=1,opt.niter do
         local dir = paths.concat(opt.folder,opt.data_name,name ,tostring(epoch))
         paths.mkdir(dir)
         file=io.open(dir..'/out.txt','w')
-        for i=1,ngen do
+        for i=1,nz do
             for j=1,nvis do
-                noise=noise:normal(0,1)
+                noise:zero()
+                local noise_cur=torch.Tensor(opt.batchSize):normal(0,1)
+                noise[{ {1,opt.batchSize},{i,i}}]=noise_cur
                 local fake=G['netG'..i]:forward(noise)
                 vis[{ { 1+(j-1)*opt.batchSize,j*opt.batchSize},{1,ndim}}]=fake
            end
