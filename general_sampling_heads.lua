@@ -182,7 +182,7 @@ for epoch=1,opt.niter do
                 noise:zero()
                 local noise_cur=torch.Tensor(opt.batchSize):normal(0,1)
                 noise[{ {1,opt.batchSize},{i,i}}]=noise_cur
-                local fake=G['netG'..i]:forward(noise)
+                local fake=G['netG1']:forward(noise)
                 vis[{ { 1+(j-1)*opt.batchSize,j*opt.batchSize},{1,ndim}}]=fake
            end
             io.output(file)
