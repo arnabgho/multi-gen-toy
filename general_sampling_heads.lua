@@ -128,9 +128,11 @@ local fDx=function(x)
         netD:backward(input,df_do)
 
         noise:zero()
-        local noise_id=torch.random(nz)
-        local noise_cur=torch.Tensor(opt.batchSize):normal(0,1)
-        noise[{ {1,opt.batchSize},{noise_id,noise_id}}]=noise_cur
+        for k=1,opt.batchSize do
+            local noise_id=torch.random(nz)
+            local noise_cur=torch.normal(0,1)
+            noise[k][noise_id]=noise_cur
+        end    
         --noise:normal(0,1)
         noise_cache[i]=noise
         local fake=G['netG'..i]:forward(noise)
