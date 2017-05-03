@@ -177,11 +177,13 @@ for epoch=1,opt.niter do
                 local fake=G['netG'..i]:forward(noise)
                 vis[{ { 1+(j-1)*opt.batchSize,j*opt.batchSize},{1,ndim}}]=fake
            end
-            io.output(file)
+           io.output(file)
+           if opt.ndim==1 then 
             gnuplot.pngfigure(dir..'/out_'..i..'.png')
             gnuplot.hist(vis) --gnuplot.hist(vis,nbin)
             gnuplot.plotflush()
             gnuplot.close()
+           end
             for j=1,nvis*opt.batchSize do
                 if ndim==1 then
                     io.write(string.format('%d %f\n',i,vis[j][1]))

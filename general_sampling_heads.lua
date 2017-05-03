@@ -131,10 +131,11 @@ local fDx=function(x)
         noise:zero()
         for k=1,opt.batchSize do
             local noise_id=torch.random(nz)
+            local noise_cur=nil
             if opt.sampling=='normal' then
-                local noise_cur=torch.normal(0,1)
+                noise_cur=torch.normal(0,1)
             else 
-                local noise_cur=torch.uniform(-1,1)
+                noise_cur=torch.uniform(-1,1)
             end
             noise[k][noise_id]=noise_cur
         end    
@@ -178,17 +179,18 @@ for epoch=1,opt.niter do
     end
     --print('epoch '..epoch..' errG '..tostring(errG)..' errD '..tostring(errD))
     if epoch%save_freq==0 then
-        local name=opt.exp_name .. '_' .. opt.ngen .. '_' .. tostring(opt.batchnorm) .. '_' .. opt.nhid .. '_' .. opt.nz .. '_' .. opt.K .. '_' opt.sampling
+        local name=opt.exp_name .. '_' .. opt.ngen .. '_' .. tostring(opt.batchnorm) .. '_' .. opt.nhid .. '_' .. opt.nz .. '_' .. opt.K .. '_'.. opt.sampling
         local dir = paths.concat(opt.folder,opt.data_name,name ,tostring(epoch))
         paths.mkdir(dir)
         file=io.open(dir..'/out.txt','w')
         for i=1,nz do
             for j=1,nvis do
                 noise:zero()
-                if opt.sampling='normal' then
-                    local noise_cur=torch.Tensor(opt.batchSize):normal(0,1)
+                local noise_cur=nil
+                if opt.sampling=='normal' then
+                    noise_cur=torch.Tensor(opt.batchSize):normal(0,1)
                 else
-                    local noise_cur=torch.Tensor(opt.batchSize):uniform(-1,1)
+                    noise_cur=torch.Tensor(opt.batchSize):uniform(-1,1)
                 end
                 noise[{ {1,opt.batchSize},{i,i}}]=noise_cur
                 local fake=G['netG1']:forward(noise)
